@@ -1,6 +1,8 @@
 <?php
 if( !defined('IN') ) die('bad request');
 include_once( AROOT . 'controller'.DS.'app.class.php' );
+include_once( AROOT . 'lib'.DS.'redis.function.php' );
+include_once( AROOT . 'lib'.DS.'json.function.php' );
 include_once( AROOT . 'lib' . DS . 'crypto.function.php');
 class userController extends coreController
 {
@@ -23,13 +25,12 @@ class userController extends coreController
         $pass = $_REQUEST['pass'];
 		$callback = $_REQUEST['callback'];
 		//todo check db and login
-		$redis = new Redis();
-        $redis->connect('127.0.0.1',6379);
+		$redis = getRedis();
         $userpass = $redis->hGet('user:'.$user, 'pass');
         $registTime = $redis->hGet('user:'.$user, 'registTime'); 
         if (empty($userpass) || $userpass != $pass)
         {
-        	echo($callback.'("result":1)');
+        	return_msg('10001', '密码不正确');
         }
         else 
         {
@@ -47,7 +48,7 @@ class userController extends coreController
         		$redis->delete('session:'.$sessionId);
         		$redis->setex('session:'.$sessionId, $this->cache_time, $user);
         	}
-        	echo($callback.'("result":0)');      	
+        	return_msg('0', '操作成功', json_encode(array('session_id'=>$sessionId)));      	
         }
 	}
 	
@@ -56,8 +57,7 @@ class userController extends coreController
 		$user = $_REQUEST['user'];
 		$pass = $_REQUEST['pass'];
 		$callback = $_REQUEST['callback'];
-		$redis = new Redis();
-        $redis->connect('127.0.0.1',6379);
+		$redis = getRedis();
 	    if ($redis->hGet('user:'.$user, 'user'))
         {
         	//该用户名已注册
