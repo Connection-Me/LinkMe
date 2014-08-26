@@ -25,10 +25,8 @@ class userController extends coreController
         $pass = $_REQUEST['pass'];
 		$callback = $_REQUEST['callback'];
 		//todo check db and login
-		$redis = getRedis();
-        $userpass = $redis->hGet('user:'.$user, 'pass');
-        $registTime = $redis->hGet('user:'.$user, 'registTime'); 
-        if (empty($userpass) || $userpass != $pass)
+		$data = redis_hmget('user:'.$user, array('pass', 'registTime')); 
+        if (isset($data['pass']) || $data['pass'] != $pass)
         {
         	return_msg('10001', '密码不正确');
         }
@@ -36,18 +34,8 @@ class userController extends coreController
         {
         	//存在该用户，判断session
         	$sessionId = md5_salt($user, $registTime); 
-        	//var_dump('session:'.$sessionId);
-        	if (!$redis->get('session:'.$sessionId))
-        	{
-        		//用户session已失效,设置一个有时限的session
-        		$redis->setex('session:'.$sessionId, $this->cache_time, $user);
-        	}
-        	else 
-        	{
-        		//删除原有session，替换一个新的session
-        		$redis->delete('session:'.$sessionId);
-        		$redis->setex('session:'.$sessionId, $this->cache_time, $user);
-        	}
+        	//替换session并带有生命周期
+        	redis_set('session:'.$sessionId, $user, $this->cache_time);
         	return_msg('0', '操作成功', json_encode(array('session_id'=>$sessionId)));      	
         }
 	}
@@ -56,21 +44,19 @@ class userController extends coreController
 	{
 		$user = $_REQUEST['user'];
 		$pass = $_REQUEST['pass'];
-		$callback = $_REQUEST['callback'];
 		$redis = getRedis();
-	    if ($redis->hGet('user:'.$user, 'user'))
+	    if (redis_hget('user:'.$user, 'user'))
         {
         	//该用户名已注册
-        	echo($data['callback'].'("result":1)');
+        	return_msg('xxxxxx', '用户名已注册');
         }
         else 
         {
         	//该用户名未注册
         	$registTime = time();
-        	$redis->hMset('user:'.$user, 
+        	redis_hmset('user:'.$user, 
         	    array('user'=>$user, 'pass'=>$pass, 'registTime'=>$registTime));
-        	echo($data['callback'].'("result":0)');
+        	return_msg('0', '操作成功');
         }
 	}
-	
 }

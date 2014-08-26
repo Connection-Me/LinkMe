@@ -21,5 +21,60 @@ function getRedis($host = null, $port = null)
 			return $GLOBALS['redis'];
 		}
 	}
+	else 
+	{
+		$GLOBALS['redis'] = new Redis();
+	}
 	return null;
+}
+
+function redis_get($key)
+{
+	if ($redis == null) $redis = getRedis();
+	return $redis->get($key);
+}
+
+function redis_set($key, $value, $expire = null)
+{
+	if ($redis == null) $redis = getRedis();
+	if ($expire == null)
+	{
+		return $redis->set($key, $value);
+	}
+	else 
+	{
+		return $redis->setex($key, $expire, $value);
+	}
+}
+
+function redis_hget($h, $key)
+{
+	if ($redis == null) $redis = getRedis();
+	return $redis->hGet($h, $key);
+}
+
+function redis_hset($h, $key, $value)
+{
+	if ($redis == null) $redis = getRedis();
+	return $redis->hSet($h, $key, $value);
+}
+
+function redis_hmset($h, $data)
+{
+	if ($redis == null) $redis = getRedis();
+	if (!is_array($data))
+	{
+		return false;
+	}
+	return $redis->hMset($h, $data);
+}
+
+function redis_hmget($h, $data)
+{
+	if ($redis == null) $redis = getRedis();
+	if (!is_array($data))
+	{
+		return array();
+	}
+	return $redis->hMget($h, $data);
 }
