@@ -17,46 +17,65 @@ class userController extends coreController
 	function index()
 	{
 		echo ('hello world');
+		return;
 	}
 	
 	function login()
 	{
-		$user = $_REQUEST['user'];
-        $pass = $_REQUEST['pass'];
-		$callback = $_REQUEST['callback'];
-		//todo check db and login
-		$data = redis_hmget('user:'.$user, array('pass', 'registTime')); 
-        if (isset($data['pass']) || $data['pass'] != $pass)
+		$username = $_REQUEST['user'];
+        $userpass = $_REQUEST['pass'];
+        //1.检查数据库中有否该用户
+        $uid = redis_get('userHash:'.$username);
+        if (isset($uid))
         {
-        	return_msg('10001', '密码不正确');
+        	//用户未注册
+        	return_message('10002');
+        }
+		//2.检查密码是否一致
+		$data = redis_hmget('user:'.$uid, array('userPass', 'registTime'));
+		$userpass_md5 = md5_salt($userpass, $data['registTime']);
+        if ($userpass_md5 != $userpass)
+        {
+        	return_message('10001');
         }
         else 
         {
         	//存在该用户，判断session
-        	$sessionId = md5_salt($user, $registTime); 
+        	$sessionId = md5_salt($uid, $registTime); 
         	//替换session并带有生命周期
-        	redis_set('session:'.$sessionId, $user, $this->cache_time);
-        	return_msg('0', '操作成功', json_encode(array('session_id'=>$sessionId)));      	
+        	redis_set('session:'.$sessionId, $uid, $this->cache_time);
+        	return_message('0', json_encode(array('session_id'=>$sessionId)));      	
         }
 	}
 	
 	function regist()
 	{
-		$user = $_REQUEST['user'];
-		$pass = $_REQUEST['pass'];
-		$redis = getRedis();
-	    if (redis_hget('user:'.$user, 'user'))
-        {
-        	//该用户名已注册
-        	return_msg('xxxxxx', '用户名已注册');
-        }
+		$username = $_REQUEST['user'];
+		$userpass = $_REQUEST['pass'];
+		//1.检查注册的用户名和密码是否有非法字符
+		$tmp1 = preg_match($GLOBALS['preg']['regist'], $username);
+		$tmp2 = preg_match($GLOBALS['preg']['regist'], $userpass);
+		if (!($tmp1 == 0 && $tmp2 == 0))
+		{
+			return_message('10003');
+			return;
+		}
+		
+		//2.检查注册的用户名是否已被注册
+		$uid = redis_get('userHash:'.$username);
+		if (false == $uid)
+		{
+			//该用户名未注册
+        	$registTime = time();
+        	$userpass_md5 = md5_salt($userpass, $registTime);
+        	redis_hmset('user:'.$uid, 
+        	    array('userName'=>$username, 'userPass'=>$userpass_md5, 'registTime'=>$registTime));
+        	return_message('0');
+		}
         else 
         {
-        	//该用户名未注册
-        	$registTime = time();
-        	redis_hmset('user:'.$user, 
-        	    array('user'=>$user, 'pass'=>$pass, 'registTime'=>$registTime));
-        	return_msg('0', '操作成功');
+        	//该用户名已注册
+        	return_message('10004');
         }
 	}
 }
