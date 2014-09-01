@@ -1,15 +1,15 @@
 {
-    "hobbys":[
+    "1":
 	    {
 		    "hid":1,
 			"name":"Sports",
 		    "description":"bra bra bra"
 		},
-	
+	"2":
 	    {
 		    "hid":2,
 			"name":"LOL",
 			"description":"bra bra bra"
 		}
-	]
+	
 }

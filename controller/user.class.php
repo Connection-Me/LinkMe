@@ -30,6 +30,7 @@ class userController extends coreController
         {
         	//用户未注册
         	return_message('10002');
+        	return;
         }
 		//2.检查密码是否一致
 		$data = redis_hmget('user:'.$uid, array('userPass', 'registTime'));
@@ -37,6 +38,7 @@ class userController extends coreController
         if ($userpass_md5 != $userpass)
         {
         	return_message('10001');
+        	return;
         }
         else 
         {
@@ -44,7 +46,8 @@ class userController extends coreController
         	$sessionId = md5_salt($uid, $registTime); 
         	//替换session并带有生命周期
         	redis_set('session:'.$sessionId, $uid, $this->cache_time);
-        	return_message('0', json_encode(array('session_id'=>$sessionId)));      	
+        	return_message('0', array('session_id'=>$sessionId));
+        	return;      	
         }
 	}
 	
@@ -71,11 +74,13 @@ class userController extends coreController
         	redis_hmset('user:'.$uid, 
         	    array('userName'=>$username, 'userPass'=>$userpass_md5, 'registTime'=>$registTime));
         	return_message('0');
+        	return;
 		}
         else 
         {
         	//该用户名已注册
         	return_message('10004');
+        	return;
         }
 	}
 }

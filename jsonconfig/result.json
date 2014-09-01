@@ -1,32 +1,33 @@
 {
-    "result":[
+    "0":
 	    {
+		    "id" : 0,
 		    "result_code" : 0,
 			"result_msg"  : "操作成功"
 		},
-		
+	"10001":	
 		{   
+		    "id" : 10001,
 		    "result_code" : 10001,
             "result_msg"  : "密码错误"	
 		},
-		
+	"10002":	
 		{
+		    "id" : 10002,
 		    "result_code" : 10002,
 			"result_msg"  : "用户未注册"
 		},
-		
+	"10003":	
 		{
+		    "id" : 10003,
 		    "result_code" : 10003,
 			"result_msg"  : "注册信息有误"
 		},
-			
+	"10004":		
 		{
-		    
+		    "id" : 10004,
 		    "result_code" : 10004,
 			"result_msg"  : "该用户名已被注册",
             "description" : "user模块，regist函数，当用户注册的用户名已被注册时使用"			
 	    }
-		    
-	]
-
 }

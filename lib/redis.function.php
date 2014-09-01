@@ -6,11 +6,10 @@ function getRedis($host = null, $port = null)
 	{
 		include_once (AROOT . DS . 'config' . DS . 'db.config.php');
 		$redis_config = $GLOBALS['config']['redis'];
-		
 		if (null == $host) $host = $redis_config['host'];
 		if (null == $port) $port = $redis_config['port'];
-		
-		if (!$GLOBALS['redis']->connect($host, $port))
+		$redis = new Redis();
+		if (!$redis->connect($host, $port))
 		{
 			// connect failed
 			halt('redis connect failed!');
@@ -18,12 +17,13 @@ function getRedis($host = null, $port = null)
 		}
 		else 
 		{
+			$GLOBALS['redis'] = $redis;
 			return $GLOBALS['redis'];
 		}
 	}
 	else 
 	{
-		$GLOBALS['redis'] = new Redis();
+		return $GLOBALS['redis'];
 	}
 	return null;
 }

@@ -24,5 +24,4 @@ else
 
 $GLOBALS['config']['redis']['host'] = '127.0.0.1';
 $GLOBALS['config']['redis']['port'] = '6379';
-$GLOBALS['redis'] = new Redis();
 
