@@ -29,13 +29,13 @@
 		    "result_code" : 10004,
 			"result_msg"  : "该用户名已被注册",
             "description" : "user模块，regist函数，当用户注册的用户名已被注册时使用"			
-	    }
+	    },
 	"10005":
 	    {
 	        "id" : 10005,
 	        "result_code" : 10005,
 	        "result_msg"  : "未登陆或session已过期，请重新登陆"
-	    }
+	    },
 	    
 	    
 	    
