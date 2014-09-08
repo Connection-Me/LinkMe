@@ -78,3 +78,9 @@ function redis_hmget($h, $data)
 	}
 	return $redis->hMget($h, $data);
 }
+
+function redis_incr($key)
+{
+	if ($redis == null) $redis = getRedis();
+	return $redis->incr($key);
+}

@@ -22,10 +22,10 @@ class userController extends coreController
 	
 	function login()
 	{
-		$username = $_REQUEST['user'];
-        $userpass = $_REQUEST['pass'];
+		$userName = $_REQUEST['user'];
+        $userPass = $_REQUEST['pass'];
         //1.检查数据库中有否该用户
-        $uid = redis_get('userHash:'.$username);
+        $uid = redis_get('userHash:'.$userName);
         if (isset($uid))
         {
         	//用户未注册
@@ -34,8 +34,8 @@ class userController extends coreController
         }
 		//2.检查密码是否一致
 		$data = redis_hmget('user:'.$uid, array('userPass', 'registTime'));
-		$userpass_md5 = md5_salt($userpass, $data['registTime']);
-        if ($userpass_md5 != $userpass)
+		$userpass_md5 = md5_salt($userPass, $data['registTime']);
+        if ($userpass_md5 != $userPass)
         {
         	return_message('10001');
         	return;
@@ -53,8 +53,8 @@ class userController extends coreController
 	
 	function regist()
 	{
-		$username = $_REQUEST['user'];
-		$userpass = $_REQUEST['pass'];
+		$username = $_REQUEST['userName'];
+		$userpass = $_REQUEST['userPass'];
 		//1.检查注册的用户名和密码是否有非法字符
 		$tmp1 = preg_match($GLOBALS['preg']['regist'], $username);
 		$tmp2 = preg_match($GLOBALS['preg']['regist'], $userpass);
@@ -66,7 +66,7 @@ class userController extends coreController
 		
 		//2.检查注册的用户名是否已被注册
 		$uid = redis_get('userHash:'.$username);
-		if (false == $uid)
+		if (empty($uid))
 		{
 			//该用户名未注册
         	$registTime = time();
@@ -83,4 +83,11 @@ class userController extends coreController
         	return;
         }
 	}
+	
+    public static function sessionCheck($sessionId)
+    {
+    	return redis_get('session:'.$sessionId);
+    }
 }
+
+
