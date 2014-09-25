@@ -61,19 +61,49 @@ class activityController extends coreController
 			return;
 		}
 	    $activity = redisr_hget('user:'.$uid, 'activity');
-	    $arrayActivity = array();
-	    if (empty($activity))
-	    {
-	        $arrayActivity = $activity.split(',', $activity);
-	    }
+	    $arrayActivity = split(',', $activity);
 	    $actList = array();
 	    $actCount = 0;
 	    forEach($arrayActivity as $aid)
 	    {
-	    	$act = $redis_hmget('activity:'.$aid, array('name', 'initTime', 'startTime', 'approve', 'reject', 'picture'));
+	    	$act = redis_hmget('activity:'.$aid, array('name', 'initTime', 'startTime', 'approveCount', 'rejectCount', 'picture'));
 	        $actCount = array_push($actList, $act);
 	    }
 	    return_message('0', array('activityCount'=>$actCount, 'activityList'=>$actList));
 	    return;
+	}
+	
+	function showDetail()
+	{
+	    $sessionId = $_REQUEST['sessionid'];
+		$uid = userController::sessionCheck($sessionId);
+		if (false == $uid)
+		{
+			return_message('10005');
+			return;
+		}
+		
+		$aid = $_REQUEST['aid'];
+		$act = $redis_hmget('activity:'.$aid, array('name', 'description', 'startTime', 'stopTime',
+		 'inviteList', 'approveList', 'approveCount', 'rejectList',  'rejectCount', 'picture'));
+		$arrayApprove = split(',', $act['approveList']);
+		$arrayInvite = split(',', $act['inviteList']);
+		$apprList = array();
+		$inviList = array();
+		foreach ($arrayApprove as $apprUser)
+		{
+			$appr = redis_hmget('user:'.$apprUser, array('uid', 'nickName', 'profile'));
+			array_push($apprList, $appr);
+		}
+		foreach ($arrayInvite as $inviUser)
+		{
+			$invi = redis_hmget('user:'.$apprUser, array('uid', 'nickName', 'profile'));
+		    array_push($inviList, $invi);
+		}
+		$act['approveList'] = $arrayApprove;
+		$act['inviteList'] = $arrayInvite;
+		
+		return_message('0', $act);
+		return;
 	}
 }

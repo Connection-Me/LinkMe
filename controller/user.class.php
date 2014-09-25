@@ -17,6 +17,8 @@ class userController extends coreController
 
 	function index()
 	{
+		$p = 1111111111111111111111;
+		var_dump($p);
 		echo ('hello world');
 		echo (microtime());
 		list($usec, $sec) = explode(" ", microtime());
