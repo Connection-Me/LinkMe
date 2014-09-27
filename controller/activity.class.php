@@ -60,14 +60,36 @@ class activityController extends coreController
 			return_message('10005');
 			return;
 		}
-	    $activity = redisr_hget('user:'.$uid, 'activity');
+	    $activity = redisr_hget('user:'.$uid, 'activityList');
 	    $arrayActivity = split(',', $activity);
 	    $actList = array();
 	    $actCount = 0;
+	    $way = $_REQUEST['way'];
+	    
 	    forEach($arrayActivity as $aid)
 	    {
 	    	$act = redis_hmget('activity:'.$aid, array('name', 'initTime', 'startTime', 'approveCount', 'rejectCount', 'picture'));
-	        $actCount = array_push($actList, $act);
+	        if ('all' == $way) //查询所有自己参加的活动
+	        {
+	    	    $actCount = array_push($actList, $act);
+	        }
+	        else if ('host' == $way)  //所有自己是发起人的活动
+	        {
+	        	$starter = redis_hget('activity:'.$aid, 'starter');
+	            if ($starter == $uid)
+	            {
+	            	$actCount = array_push($actList, $act);
+	            }
+	        }
+	        else if ('end' == $way) //所有自己参加的已结束的活动
+	        {
+	        	$stopTime = redis_hget('activity:'.$aid, 'stop');
+	            $now = time();
+	        	if ($now > $stopTime)
+	        	{
+	        		$actCount = array_push($actList, $act);
+	        	}
+	        }	
 	    }
 	    return_message('0', array('activityCount'=>$actCount, 'activityList'=>$actList));
 	    return;
