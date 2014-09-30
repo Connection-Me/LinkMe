@@ -70,13 +70,13 @@ class userController extends coreController
 		
 		//2.检查注册的用户名是否已被注册
 		$uid = redis_get('userHash:'.$userName);
-		if (empty($uid))
+		if (false != self::checkUserExist($userName, 'userName'))
 		{
 			//该用户名未注册
         	$registTime = time();
         	$userpass_md5 = md5_salt($userPass, $registTime);
         	$uid = redis_incr('userCount');
-        	redis_set('userHash:'.$userName, uid);
+        	redis_hset('userHash', 'userName:'.$userName, uid);
         	redis_hmset('user:'.$uid, 
         	    array('userName'=>$userName, 'userPass'=>$userpass_md5, 'registTime'=>$registTime));	
         	return_message('0');
@@ -91,11 +91,51 @@ class userController extends coreController
         }
 	}
 	
+	function showUsers()
+	{
+	    $sessionId = $_REQUEST['sessionid'];
+		$uid = userController::sessionCheck($sessionId);
+		if (false == $uid)
+		{
+			return_message('10005');
+			return;
+		}
+		
+	} 
+	
     public static function sessionCheck($sessionId)
     {
     	return redis_get('session:'.$sessionId);
     }
-    
+
+    public static function checkUserExist($data, $way = 'id')
+    {
+    	$uid = null;
+    	if ('id' == $way)
+    	{
+    		$uid = redis_hget('user'.$data, 'uid');
+    	}
+    	else if ('userName' == $way)
+    	{
+    		$data = array(
+    		    'userName:'.$data 
+    		);
+    		$uid = redis_hmget('userHash', $data);
+    	}
+    	else if ('nickName' == $way)
+    	{
+    		$data = array(
+    		    'nickName:'.$data 
+    		);
+    		$uid = redis_hmget('userHash', $data);
+    	}
+        if (empty($uid))
+    	{
+    	    return false;
+    	}
+    	//成功找到该用户，则返回其uid
+    	return $uid;
+    }
 }
 
 

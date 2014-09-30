@@ -5,6 +5,18 @@
 		    "result_code" : 0,
 			"result_msg"  : "操作成功"
 		},
+	"1":
+	    {
+	        "id" : 1,
+	        "result_code" : 1,
+	        "result_msg"  : "参数有误"
+	    }, 
+	"2":
+	    {
+	        "id" : 2,
+	        "result_code" : 2,
+	        "result_msg"  : "找不到用户"
+	    },  
 	"10001":	
 		{   
 		    "id" : 10001,
@@ -45,5 +57,17 @@
 	        "id" : 20001,
 	        "result_code" : 20001,
 	        "result_msg"  : "新建活动失败"
-	    }    
+	    },  
+	"20002":
+	    {
+	        "id" : 20002,
+	        "result_code" : 20002,
+	        "result_msg"  : "邀请失败，用户不是活动发起人"
+	    },
+	"20003":
+	    {
+	        "id" : 20003,
+	        "result_code" : 20003,
+	        "result_msg"  : "邀请失败，活动已开始"
+	    }
 }

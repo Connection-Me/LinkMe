@@ -128,4 +128,109 @@ class activityController extends coreController
 		return_message('0', $act);
 		return;
 	}
+	
+	function invite()
+	{
+	    $sessionId = $_REQUEST['sessionid'];
+		$uid = userController::sessionCheck($sessionId);
+		if (false == $uid)
+		{
+			return_message('10005');
+			return;
+		}
+		$inviteUser = $_REQUEST['inviteUser'];
+		$way = $_REQUEST['way']; //使用uid或userName或nickName
+		if (empty($inviteUser))
+		{
+			return_message('1');
+			return;
+		}
+		$inviteUser = userController::checkUserExist($inviteUser, $way);
+		if (false == $inviteUser)
+		{
+			return_message('2'); //邀请失败，找不到该用户
+			return;
+		}
+		$aid = $_REQUEST['aid'];
+		$act = redis_hmget('activity'.$aid, array('starter', 'startTime', 'inviteCount', 'inviteList'));
+		if ($uid != $act['starter'])
+		{
+			//发起人不是该用户，无法邀请
+			return_message('20002');
+			return;
+		}
+		$now = time();
+		if ($now > $act['startTime'])
+		{
+			//活动已开始，无法邀请
+			return_message('20003');
+			return;
+		}
+		$inviteList = redis_hget('activity'.$aid, 'inviteList');
+		$inviteArray = split(',', $inviteList);
+		$data = array();
+		if (0 == count($inviteArray))
+		{
+			$data['inviteCount'] = 1;
+			$data['inviteList'] = $inviteUser;
+		}
+		else 
+		{
+			foreach ($inviteList as $inv)
+			{
+				if ($inv == $inviteUser)
+				{
+					return_message('0');
+					return;
+				}
+			}
+			$data['inviteCount'] = $data['inviteCount'] + 1;
+			$data['inviteList'] = $data['inviteList'] . ',' . $inviteUser;
+		}
+		redis_hmset('activity:'.$aid, $data);
+	    $userInvite = redis_hget('user:'.$inviteUser, 'inviteList');
+		if (empty($userInvite))
+		{
+			redis_hset('user:'.$inviteUser, 'inviteList', $aid);
+		}
+		else 
+		{
+			redis_hset('user:'.$inviteUser, 'inviteList', $userInvite . ',' . $aid);
+		}
+	  
+	    return_message('0');
+		return;
+	}
+	
+	
+	function checkInvite()
+	{
+		//客户端每10秒请求一次
+	    $sessionId = $_REQUEST['sessionid'];
+		$uid = userController::sessionCheck($sessionId);
+		if (false == $uid)
+		{
+			return_message('10005');
+			return;
+		}
+		
+		$inviteList = redis_hget('user:'.uid, 'inviteList');
+		if (empty($inviteList))
+		{
+			return_message('0');
+			return;
+		}
+		
+		$data = array();
+		foreach ($inviteList as $aid)
+		{
+			$act = redis_hmget('activity:'.$aid, array('name', 'initTime', 'startTime', 
+			'approveCount', 'rejectCount', 'picture', 'starter'));
+		    $starter = $act['starter'];
+		    $act['starter'] = redis_hget('user:'.$starter, 'userName');
+		    array_push($data, $act);
+		}
+		return_message('0', $data);
+		return;
+	}
 }
