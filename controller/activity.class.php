@@ -148,7 +148,7 @@ class activityController extends coreController
 		$inviteUser = userController::checkUserExist($inviteUser, $way);
 		if (false == $inviteUser)
 		{
-			return_message('2'); //邀请失败，找不到该用户
+			return_message('20004'); //邀请失败，找不到该用户
 			return;
 		}
 		$aid = $_REQUEST['aid'];
@@ -227,7 +227,7 @@ class activityController extends coreController
 			$act = redis_hmget('activity:'.$aid, array('name', 'initTime', 'startTime', 
 			'approveCount', 'rejectCount', 'picture', 'starter'));
 		    $starter = $act['starter'];
-		    $act['starter'] = redis_hget('user:'.$starter, 'userName');
+		    $act['starter'] = redis_hget('user:'.$starter, 'nickName');
 		    array_push($data, $act);
 		}
 		return_message('0', $data);
