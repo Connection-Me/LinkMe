@@ -1,6 +1,7 @@
 <?php
 if( !defined('IN') ) die('bad request');
 include_once( AROOT . 'controller'.DS.'app.class.php' );
+include_once( AROOT . 'controller'.DS.'user.class.php');
 
 class activityController extends coreController
 {
@@ -33,12 +34,12 @@ class activityController extends coreController
 		$endTime = $_REQUEST['endTime'];
 		$initTime = time();
 		redis_hmset('activity:'.$aid,
-		 array('name'=>$name, 'type'=>$type, 'description'=>$description, 'picture'=>$picture,
+		 array('aid'=>$aid, 'name'=>$name, 'type'=>$type, 'description'=>$description, 'picture'=>$picture,
 		 'lowerLimit'=>$lowerLimit, 'upperLimit'=>$upperLimit, 'openTime'=>$openTime,
 		  'closeTime'=>$closeTime, 'starter'=>$uid, 'startTime'=>$startTime, 'endTime'=>$endTime,
 		 'initTime'=>$initTime));
-		$activity = redis_hget('user:'.$uid, 'activity');
-		if (!empty($activity))
+		$activity = redis_hget('user:'.$uid, 'activityList');
+		if (empty($activity))
 		{
 			$activity = $aid;
 		}
@@ -46,29 +47,29 @@ class activityController extends coreController
 		{
 			$activity .= ','.$aid;
 		}
-		redis_hset('user:'.$uid, 'activity', $activity);
+		redis_hset('user:'.$uid, 'activityList', $activity);
 		return_message('0');
 		return;
 	}
 	
 	function showList()
 	{
-	    $sessionId = $_REQUEST['sessionid'];
+	    $sessionId = $_REQUEST['sessionId'];
 		$uid = userController::sessionCheck($sessionId);
 		if (false == $uid)
 		{
 			return_message('10005');
 			return;
 		}
-	    $activity = redisr_hget('user:'.$uid, 'activityList');
+	    $activity = redis_hget('user:'.$uid, 'activityList');
 	    $arrayActivity = split(',', $activity);
 	    $actList = array();
 	    $actCount = 0;
 	    $way = $_REQUEST['way'];
-	    
+	    //var_dump($arrayActivity);
 	    forEach($arrayActivity as $aid)
 	    {
-	    	$act = redis_hmget('activity:'.$aid, array('name', 'initTime', 'startTime', 'approveCount', 'rejectCount', 'picture'));
+	    	$act = redis_hmget('activity:'.$aid, array('aid', 'name', 'initTime', 'startTime', 'approveCount', 'rejectCount', 'picture'));
 	        if ('all' == $way) //查询所有自己参加的活动
 	        {
 	    	    $actCount = array_push($actList, $act);
@@ -97,7 +98,7 @@ class activityController extends coreController
 	
 	function showDetail()
 	{
-	    $sessionId = $_REQUEST['sessionid'];
+	    $sessionId = $_REQUEST['sessionId'];
 		$uid = userController::sessionCheck($sessionId);
 		if (false == $uid)
 		{
@@ -106,7 +107,7 @@ class activityController extends coreController
 		}
 		
 		$aid = $_REQUEST['aid'];
-		$act = $redis_hmget('activity:'.$aid, array('name', 'description', 'startTime', 'stopTime',
+		$act = redis_hmget('activity:'.$aid, array('aid', 'name', 'description', 'startTime', 'stopTime',
 		 'inviteList', 'approveList', 'approveCount', 'rejectList',  'rejectCount', 'picture'));
 		$arrayApprove = split(',', $act['approveList']);
 		$arrayInvite = split(',', $act['inviteList']);
@@ -131,7 +132,7 @@ class activityController extends coreController
 	
 	function invite()
 	{
-	    $sessionId = $_REQUEST['sessionid'];
+	    $sessionId = $_REQUEST['sessionId'];
 		$uid = userController::sessionCheck($sessionId);
 		if (false == $uid)
 		{
@@ -152,7 +153,7 @@ class activityController extends coreController
 			return;
 		}
 		$aid = $_REQUEST['aid'];
-		$act = redis_hmget('activity'.$aid, array('starter', 'startTime', 'inviteCount', 'inviteList'));
+		$act = redis_hmget('activity:'.$aid, array('starter', 'startTime', 'inviteCount', 'inviteList'));
 		if ($uid != $act['starter'])
 		{
 			//发起人不是该用户，无法邀请
@@ -176,7 +177,7 @@ class activityController extends coreController
 		}
 		else 
 		{
-			foreach ($inviteList as $inv)
+			foreach ($inviteArray as $inv)
 			{
 				if ($inv == $inviteUser)
 				{
@@ -206,7 +207,7 @@ class activityController extends coreController
 	function checkInvite()
 	{
 		//客户端每10秒请求一次
-	    $sessionId = $_REQUEST['sessionid'];
+	    $sessionId = $_REQUEST['sessionId'];
 		$uid = userController::sessionCheck($sessionId);
 		if (false == $uid)
 		{
@@ -214,20 +215,23 @@ class activityController extends coreController
 			return;
 		}
 		
-		$inviteList = redis_hget('user:'.uid, 'inviteList');
+		$inviteList = redis_hget('user:'.$uid, 'inviteList');
+		var_dump($inviteList);
 		if (empty($inviteList))
 		{
 			return_message('0');
 			return;
 		}
 		
+		$inviteArray = split(',', $inviteList);
 		$data = array();
-		foreach ($inviteList as $aid)
+		foreach ($inviteArray as $aid)
 		{
 			$act = redis_hmget('activity:'.$aid, array('name', 'initTime', 'startTime', 
 			'approveCount', 'rejectCount', 'picture', 'starter'));
+			var_dump($act);
 		    $starter = $act['starter'];
-		    $act['starter'] = redis_hget('user:'.$starter, 'nickName');
+		    $act['starter'] = redis_hget('user:'.$starter, 'userName');
 		    array_push($data, $act);
 		}
 		return_message('0', $data);

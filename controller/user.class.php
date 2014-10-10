@@ -28,8 +28,8 @@ class userController extends coreController
 		$userName = $_REQUEST['user'];
         $userPass = $_REQUEST['pass'];
         //1.检查数据库中有否该用户
-        $uid = redis_get('userHash:'.$userName);
-        if (isset($uid))
+        $uid = self::checkUserExist($userName, 'userName');
+        if (empty($uid))
         {
         	//用户未注册
         	return_message('10002');
@@ -38,7 +38,7 @@ class userController extends coreController
 		//2.检查密码是否一致
 		$data = redis_hmget('user:'.$uid, array('userPass', 'registTime'));
 		$userpass_md5 = md5_salt($userPass, $data['registTime']);
-        if ($userpass_md5 != $userPass)
+        if ($userpass_md5 != $data['userPass'])
         {
         	return_message('10001');
         	return;
@@ -46,7 +46,7 @@ class userController extends coreController
         else 
         {
         	//存在该用户，判断session
-        	$sessionId = md5_salt($uid, $registTime); 
+        	$sessionId = md5_salt($uid, $data['registTime']); 
         	//替换session并带有生命周期
         	redis_set('session:'.$sessionId, $uid, $this->cache_time);
         	return_message('0', array('session_id'=>$sessionId));
@@ -69,14 +69,13 @@ class userController extends coreController
 		}
 		
 		//2.检查注册的用户名是否已被注册
-		$uid = redis_get('userHash:'.$userName);
-		if (false != self::checkUserExist($userName, 'userName'))
+		if (false == self::checkUserExist($userName, 'userName'))
 		{
 			//该用户名未注册
         	$registTime = time();
         	$userpass_md5 = md5_salt($userPass, $registTime);
         	$uid = redis_incr('userCount');
-        	redis_hset('userHash', 'userName:'.$userName, uid);
+        	redis_hset('userHash', 'userName:'.$userName, $uid);
         	redis_hmset('user:'.$uid, 
         	    array('userName'=>$userName, 'userPass'=>$userpass_md5, 'registTime'=>$registTime));	
         	return_message('0');
@@ -117,17 +116,13 @@ class userController extends coreController
     	}
     	else if ('userName' == $way)
     	{
-    		$data = array(
-    		    'userName:'.$data 
-    		);
-    		$uid = redis_hmget('userHash', $data);
+    		$data = 'userName:'.$data;
+    		$uid = redis_hget('userHash', $data);
     	}
     	else if ('nickName' == $way)
     	{
-    		$data = array(
-    		    'nickName:'.$data 
-    		);
-    		$uid = redis_hmget('userHash', $data);
+    		$data = 'nickName:'.$data;
+    		$uid = redis_hget('userHash', $data);
     	}
         if (empty($uid))
     	{
