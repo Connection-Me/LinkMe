@@ -25,8 +25,8 @@ class userController extends coreController
 	
 	function login()
 	{
-		$userName = $_REQUEST['user'];
-        $userPass = $_REQUEST['pass'];
+		$userName = $_REQUEST['userName'];
+        $userPass = $_REQUEST['userPass'];
         //1.检查数据库中有否该用户
         $uid = self::checkUserExist($userName, 'userName');
         if (empty($uid))
