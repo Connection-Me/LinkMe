@@ -67,6 +67,8 @@ class activityController extends coreController
 	    $actCount = 0;
 	    $way = $_REQUEST['way'];
 	    //var_dump($arrayActivity);
+	    $offset = $_REQUEST['offset'];
+	    $limit = $_REQUEST['limit'];
 	    forEach($arrayActivity as $aid)
 	    {
 	    	$act = redis_hmget('activity:'.$aid, array('aid', 'name', 'initTime', 'startTime', 'approveCount', 'rejectCount', 'picture'));
@@ -92,7 +94,14 @@ class activityController extends coreController
 	        	}
 	        }	
 	    }
-	    return_message('0', array('activityCount'=>$actCount, 'activityList'=>$actList));
+	    $retList = array();
+	    $count = count($actList);
+	    $retCount = 0;
+	    for($i = $offset; $i < $count && $i < $offset + $limit; $i++)
+	    {
+	    	$retCount = array_push($retList, $actList[$i]);
+	    }
+	    return_message('0', array('activityCount'=>$retCount, 'activityList'=>$retList));
 	    return;
 	}
 	
