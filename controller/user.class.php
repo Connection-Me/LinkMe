@@ -131,6 +131,44 @@ class userController extends coreController
     	//成功找到该用户，则返回其uid
     	return $uid;
     }
+    
+    function setHobby()
+    {
+        $sessionId = $_REQUEST['sessionId'];
+		$uid = userController::sessionCheck($sessionId);
+		if (false == $uid)
+		{
+			return_message('10005');
+			return;
+		}
+		
+		$hobbies = $_REQUEST['hobbies'];
+		$hobby_list = split('_', $hobbies);
+		$hobby_conf = $GLOBALS['jsonconfig']['hobby'];
+		$hobby_array = array();
+		foreach($hobby_list as $h)
+		{
+			if (empty($hobby_conf[$h]))
+			{
+				continue;
+			}
+			$hobby_array['hobby:'.$h] = 1;
+		}
+		foreach($hobby_conf as $h)
+		{
+			$hid = $h['hid'];
+			if (empty($hobby_array['hobby:'.$hid]))
+			{
+				$hobby_array['hobby:'.$hid] = 0;
+			}
+		}
+		var_dump($hobby_array);
+		redis_hmset('user:'.$uid, $hobby_array);
+        return_message('0');
+        return;
+    }
+    
+    //showHobby
 }
 
 
