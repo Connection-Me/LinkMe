@@ -174,7 +174,7 @@ class userController extends coreController
 		}
 		
 		$hobbies = $_REQUEST['hobbies'];
-		$hobby_list = split('_', $hobbies);
+		$hobby_list = preg_split('_', $hobbies);
 		$hobby_conf = $GLOBALS['jsonconfig']['hobby'];
 		$hobby_array = array();
 		foreach($hobby_list as $h)
