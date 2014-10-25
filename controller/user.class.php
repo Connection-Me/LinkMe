@@ -237,6 +237,37 @@ class userController extends coreController
 		logDebug('Show Hobby: hobbies=' . $ret_list, $uid, __METHOD__, __FILE__);
 		return;
     }
+    
+    //设置用户基础信息  （头像、昵称等）
+    function setUserDetail()
+    {
+        $sessionId = $_REQUEST['sessionId'];
+		$uid = userController::sessionCheck($sessionId);
+		if (false == $uid)
+		{
+			return_message('10005');
+			return;
+		}
+		$profile = $_REQUEST['profile'];
+		$nickName = $_REQUEST['nickName'];
+		$data = array();
+		if (!empty($profile))
+		{
+			$data['profile'] = $profile;
+		}
+		if (!empty($nickName))
+		{
+			$data['nickName'] = $nickName;
+		}
+		if (!empty($data))
+		{
+			redis_hmset('user:'.$uid, $data);
+		}
+		//var_dump($data);
+		return_message('0');
+		logDebug('Set user detail information OK! data='.json_encode($data), $uid, $method, $file);
+		return;
+    }
 }
 
 
