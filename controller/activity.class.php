@@ -62,7 +62,7 @@ class activityController extends coreController
 			return;
 		}
 	    $activity = redis_hget('user:'.$uid, 'activityList');
-	    $arrayActivity = split(',', $activity);
+	    $arrayActivity = preg_split('/,/', $activity);
 	    $actList = array();
 	    $actCount = 0;
 	    $way = $_REQUEST['way'];
@@ -118,8 +118,8 @@ class activityController extends coreController
 		$aid = $_REQUEST['aid'];
 		$act = redis_hmget('activity:'.$aid, array('aid', 'name', 'description', 'startTime', 'stopTime',
 		 'inviteList', 'approveList', 'approveCount', 'rejectList',  'rejectCount', 'picture'));
-		$arrayApprove = split(',', $act['approveList']);
-		$arrayInvite = split(',', $act['inviteList']);
+		$arrayApprove = preg_split('/,/', $act['approveList']);
+		$arrayInvite = preg_split('/,/', $act['inviteList']);
 		$apprList = array();
 		$inviList = array();
 		foreach ($arrayApprove as $apprUser)
@@ -177,7 +177,7 @@ class activityController extends coreController
 			return;
 		}
 		$inviteList = redis_hget('activity'.$aid, 'inviteList');
-		$inviteArray = split(',', $inviteList);
+		$inviteArray = preg_split('/,/', $inviteList);
 		$data = array();
 		if (0 == count($inviteArray))
 		{
@@ -232,7 +232,7 @@ class activityController extends coreController
 			return;
 		}
 		
-		$inviteArray = split(',', $inviteList);
+		$inviteArray = preg_split('/,/', $inviteList);
 		$data = array();
 		foreach ($inviteArray as $aid)
 		{
