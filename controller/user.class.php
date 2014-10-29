@@ -18,6 +18,7 @@ class userController extends coreController
 	function index()
 	{
 		echo ('this is LinkMe!');
+		echo (AROOT);
 	//	list($usec, $sec) = explode(" ", microtime());
 	//	var_dump($usec);
 		return;
@@ -77,7 +78,7 @@ class userController extends coreController
         	$uid = redis_incr('userCount');
         	redis_hset('userHash', 'userName:'.$userName, $uid);
         	redis_hmset('user:'.$uid, 
-        	    array('userName'=>$userName, 'userPass'=>$userpass_md5, 'registTime'=>$registTime));	
+        	    array('uid'=>$uid, 'userName'=>$userName, 'userPass'=>$userpass_md5, 'registTime'=>$registTime));	
         	return_message('0');
         	logDebug('Regist New User: uid=' . $uid . ' userName=' . $userName, $uid, __METHOD__, __FILE__);
         	return;
@@ -92,15 +93,44 @@ class userController extends coreController
 	
 	function showUsers()
 	{
-	    $sessionId = $_REQUEST['sessionid'];
-		$uid = userController::sessionCheck($sessionId);
-		if (false == $uid)
-		{
-			return_message('10005');
-			return;
-		}
-		
+	    $field = array();
+	    array_push($field, 'uid');
+		array_push($field, 'userName');
+		array_push($field, 'profile');
+		array_push($field, 'nickName');
+		$userList = userController::getAllUsers($field);
+		return_message('0', $userList);
 	} 
+	
+	//$data是所需的字段的array
+	public static function getAllUsers($data)
+	{
+		if (!is_array($data))
+		{
+			return false;
+		}
+		$userCount = redis_get('userCount');
+		$userList = array();
+		for($i = 1; $i <= $userCount; $i++)
+		{
+			$user = userController::getUser($i, $data);
+			if (!empty($user))
+			{
+				array_push($userList, $user);
+			}
+		}
+		return $userList;
+	}
+	
+	//$data是所需的字段的array
+	public static function getUser($uid, $data)
+	{
+		if (!is_array($data))
+		{
+			return false;
+		}
+		return redis_hmget('user:'.$uid, $data);
+	}
 	
     public static function sessionCheck($sessionId)
     {
@@ -130,6 +160,113 @@ class userController extends coreController
     	}
     	//成功找到该用户，则返回其uid
     	return $uid;
+    }
+    
+    //设置用户兴趣
+    function setHobby()
+    {
+        $sessionId = $_REQUEST['sessionId'];
+		$uid = userController::sessionCheck($sessionId);
+		if (false == $uid)
+		{
+			return_message('10005');
+			return;
+		}
+		
+		$hobbies = $_REQUEST['hobbies'];
+		$hobby_list = preg_split('/_/', $hobbies);
+		$hobby_conf = $GLOBALS['jsonconfig']['hobby'];
+		$hobby_array = array();
+		foreach($hobby_list as $h)
+		{
+			if (empty($hobby_conf[$h]))
+			{
+				continue;
+			}
+			$hobby_array['hobby:'.$h] = 1;
+		}
+		foreach($hobby_conf as $h)
+		{
+			$hid = $h['hid'];
+			if (empty($hobby_array['hobby:'.$hid]))
+			{
+				$hobby_array['hobby:'.$hid] = 0;
+			}
+		}
+		//var_dump($hobby_array);
+		redis_hmset('user:'.$uid, $hobby_array);
+        return_message('0');
+        logDebug('Set Hobby: hobbies=' . $hobbies, $uid, __METHOD__, __FILE__);
+        return;
+    }
+    
+    //获取用户兴趣
+    function showHobby()
+    {
+        $sessionId = $_REQUEST['sessionId'];
+		$uid = userController::sessionCheck($sessionId);
+		if (false == $uid)
+		{
+			return_message('10005');
+			return;
+		}
+		
+        $hobby_conf = $GLOBALS['jsonconfig']['hobby'];
+		$hobby_array = array();
+		foreach($hobby_conf as $h)
+		{
+			$hid = $h['hid'];
+		    array_push($hobby_array, 'hobby:'.$hid);
+		}
+		$hobby_list = redis_hmget('user:'.$uid, $hobby_array);
+		$ret_list = '';
+        foreach($hobby_conf as $h)
+		{
+			$hid = $h['hid'];
+			if (1 != $hobby_list['hobby:'.$hid])
+			{
+				continue;
+			}
+			if ('' != $ret_list)
+			{
+				$ret_list .= '_';
+			}
+			$ret_list .= $hid;		    
+		}
+		return_message('0', array('hobbies' => $ret_list));
+		logDebug('Show Hobby: hobbies=' . $ret_list, $uid, __METHOD__, __FILE__);
+		return;
+    }
+    
+    //设置用户基础信息  （头像、昵称等）
+    function setUserDetail()
+    {
+        $sessionId = $_REQUEST['sessionId'];
+		$uid = userController::sessionCheck($sessionId);
+		if (false == $uid)
+		{
+			return_message('10005');
+			return;
+		}
+		$profile = $_REQUEST['profile'];
+		$nickName = $_REQUEST['nickName'];
+		$data = array();
+		if (!empty($profile))
+		{
+			$data['profile'] = $profile;
+		}
+		if (!empty($nickName))
+		{
+			$data['nickName'] = $nickName;
+		}
+		if (!empty($data))
+		{
+			redis_hmset('user:'.$uid, $data);
+		}
+		//var_dump($data);
+		return_message('0');
+		logDebug('Set user detail information OK! data='.json_encode($data), $uid, $method, $file);
+		return;
     }
 }
 

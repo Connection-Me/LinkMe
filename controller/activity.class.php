@@ -62,11 +62,13 @@ class activityController extends coreController
 			return;
 		}
 	    $activity = redis_hget('user:'.$uid, 'activityList');
-	    $arrayActivity = split(',', $activity);
+	    $arrayActivity = preg_split('/,/', $activity);
 	    $actList = array();
 	    $actCount = 0;
 	    $way = $_REQUEST['way'];
 	    //var_dump($arrayActivity);
+	    $offset = $_REQUEST['offset'];
+	    $limit = $_REQUEST['limit'];
 	    forEach($arrayActivity as $aid)
 	    {
 	    	$act = redis_hmget('activity:'.$aid, array('aid', 'name', 'initTime', 'startTime', 'approveCount', 'rejectCount', 'picture'));
@@ -92,7 +94,14 @@ class activityController extends coreController
 	        	}
 	        }	
 	    }
-	    return_message('0', array('activityCount'=>$actCount, 'activityList'=>$actList));
+	    $retList = array();
+	    $count = count($actList);
+	    $retCount = 0;
+	    for($i = $offset; $i < $count && $i < $offset + $limit; $i++)
+	    {
+	    	$retCount = array_push($retList, $actList[$i]);
+	    }
+	    return_message('0', array('activityCount'=>$retCount, 'activityList'=>$retList));
 	    return;
 	}
 	
@@ -109,8 +118,8 @@ class activityController extends coreController
 		$aid = $_REQUEST['aid'];
 		$act = redis_hmget('activity:'.$aid, array('aid', 'name', 'description', 'startTime', 'stopTime',
 		 'inviteList', 'approveList', 'approveCount', 'rejectList',  'rejectCount', 'picture'));
-		$arrayApprove = split(',', $act['approveList']);
-		$arrayInvite = split(',', $act['inviteList']);
+		$arrayApprove = preg_split('/,/', $act['approveList']);
+		$arrayInvite = preg_split('/,/', $act['inviteList']);
 		$apprList = array();
 		$inviList = array();
 		foreach ($arrayApprove as $apprUser)
@@ -168,7 +177,7 @@ class activityController extends coreController
 			return;
 		}
 		$inviteList = redis_hget('activity'.$aid, 'inviteList');
-		$inviteArray = split(',', $inviteList);
+		$inviteArray = preg_split('/,/', $inviteList);
 		$data = array();
 		if (0 == count($inviteArray))
 		{
@@ -223,7 +232,7 @@ class activityController extends coreController
 			return;
 		}
 		
-		$inviteArray = split(',', $inviteList);
+		$inviteArray = preg_split('/,/', $inviteList);
 		$data = array();
 		foreach ($inviteArray as $aid)
 		{
