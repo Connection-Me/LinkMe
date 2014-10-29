@@ -268,6 +268,53 @@ class userController extends coreController
 		logDebug('Set user detail information OK! data='.json_encode($data), $uid, $method, $file);
 		return;
     }
+    
+    function recommand()
+	{
+	    $sessionId = $_REQUEST['sessionId'];
+		$uid = userController::sessionCheck($sessionId);
+		if (false == $uid)
+		{
+			return_message('10005');
+			return;
+		}
+		$hobby = $_REQUEST['hobby'];
+		$limit = $_REQUEST['limit'];
+		$offset = $_REQUEST['offset'];
+		
+	    $userCount = redis_get('userCount');
+		$hobby_conf = $GLOBALS['jsonconfig']['hobby'];
+		$data = array(
+		    'uid' ,'nickName', 'profile'
+		);
+	    foreach($hobby_conf as $h)
+		{
+			$hid = $h['hid'];
+			array_push($data, 'hobby:'.$hid);
+		}
+	    $userList = array();
+	    $count = 0;
+		for($i = 1 + $offset; $i <= $userCount; $i++)
+		{
+			$user = userController::getUser($i, $data);
+			if(0 != $hobby && 1 != $user['hobby:'.$hobby])
+		    {
+		    	continue;
+		    }
+		    $tmp = array();
+		    $tmp['uid'] = $user['uid'];
+		    $tmp['nickName'] = $user['nickName'];
+		    $tmp['profile'] = $user['profile'];
+		    array_push($userList, $tmp);
+		    $count++;
+		    if ($count >= $limit)
+		    {
+		    	break;
+		    }    
+		}
+		return_message('0', $userList);
+		return;
+	}
 }
 
 
