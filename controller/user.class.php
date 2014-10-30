@@ -269,7 +269,7 @@ class userController extends coreController
 		return;
     }
     
-    function recommand()
+    function recommend()
 	{
 	    $sessionId = $_REQUEST['sessionId'];
 		$uid = userController::sessionCheck($sessionId);
