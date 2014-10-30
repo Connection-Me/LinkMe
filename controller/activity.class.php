@@ -2,6 +2,7 @@
 if( !defined('IN') ) die('bad request');
 include_once( AROOT . 'controller'.DS.'app.class.php' );
 include_once( AROOT . 'controller'.DS.'user.class.php');
+include_once( AROOT . 'lib'.DS.'common.function.php');
 
 class activityController extends coreController
 {
@@ -65,30 +66,34 @@ class activityController extends coreController
 	    $arrayActivity = preg_split('/,/', $activity);
 	    $actList = array();
 	    $actCount = 0;
+	    $when = $_REQUEST['when'];
 	    $way = $_REQUEST['way'];
-	    //var_dump($arrayActivity);
 	    $offset = $_REQUEST['offset'];
 	    $limit = $_REQUEST['limit'];
 	    forEach($arrayActivity as $aid)
 	    {
-	    	$act = redis_hmget('activity:'.$aid, array('aid', 'name', 'initTime', 'startTime', 'approveCount', 'rejectCount', 'picture'));
+	    	$act = redis_hmget('activity:'.$aid, array('aid', 'name', 'initTime', 'startTime', 'approveCount', 'rejectCount', 'picture',
+	    	'starter', 'stopTime', 'openTime', 'closeTime'));
+	    	
+	        if (!activityController::checkActivityWhen($act, $when))
+	        {
+	        	continue;	
+	       	}
+	    	
 	        if ('all' == $way) //查询所有自己参加的活动
 	        {
 	    	    $actCount = array_push($actList, $act);
 	        }
 	        else if ('host' == $way)  //所有自己是发起人的活动
 	        {
-	        	$starter = redis_hget('activity:'.$aid, 'starter');
-	            if ($starter == $uid)
+	            if ($act['starter'] == $uid)
 	            {
 	            	$actCount = array_push($actList, $act);
 	            }
 	        }
-	        else if ('end' == $way) //所有自己参加的已结束的活动
+	        else if ('guest' == $way) //所有自己参加的非发起人的活动
 	        {
-	        	$stopTime = redis_hget('activity:'.$aid, 'stop');
-	            $now = time();
-	        	if ($now > $stopTime)
+	        	if ($act['starter'] != $uid)
 	        	{
 	        		$actCount = array_push($actList, $act);
 	        	}
@@ -99,10 +104,46 @@ class activityController extends coreController
 	    $retCount = 0;
 	    for($i = $offset; $i < $count && $i < $offset + $limit; $i++)
 	    {
+	    	$act = getObject($actList[i], array('aid', 'name', 'initTime', 'startTime', 'approveCount', 'rejectCount', 'picture'));
 	    	$retCount = array_push($retList, $actList[$i]);
 	    }
 	    return_message('0', array('activityCount'=>$retCount, 'activityList'=>$retList));
 	    return;
+	}
+	
+	public static function checkActivityWhen($activity, $when)
+	{
+		$now = time();
+		if ('todo' == $when)
+		{
+		    $startTime = $activity['startTime'];
+		    if ($now < $startTime)
+		    {
+		    	return true;
+		    }
+		}
+		else if ('doing' == $when)
+		{
+			$startTime = $activity['startTime'];
+			$stopTime = $activity['stopTime'];
+			if ($now > $startTime && $now < $stopTime)
+			{
+				return true;
+			}
+		}
+		else if ('done' == $when)
+		{
+			$stopTime = $activity['stopTime'];
+			if ($now > $stopTime)
+			{
+				return true;
+			}
+		}
+		else if ('all' == $when)
+		{
+			return true;
+		}
+		return false;
 	}
 	
 	function showDetail()
