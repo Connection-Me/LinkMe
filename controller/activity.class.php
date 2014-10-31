@@ -84,7 +84,7 @@ class activityController extends coreController
 	    	$act = redis_hmget('activity:'.$aid, array('aid', 'name', 'initTime', 'startTime', 'approveCount', 'rejectCount', 'picture',
 	    	'starter', 'stopTime', 'openTime', 'closeTime'));
 	    	
-	        if (!checkActivityWhen($act, $when))
+	        if (!activityController::checkActivityWhen($act, $when))
 	        {
 	        	continue;	
 	       	}
@@ -147,6 +147,10 @@ class activityController extends coreController
 			{
 				return true;
 			}
+		}
+		else if ('all' == $when)
+		{
+			return true;
 		}
 		return false;
 	}
