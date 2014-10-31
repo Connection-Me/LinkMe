@@ -84,3 +84,9 @@ function redis_incr($key)
 	if ($redis == null) $redis = getRedis();
 	return $redis->incr($key);
 }
+
+function redis_zadd($key, $score, $member)
+{
+	if ($redis == null) $redis = getRedis();
+	return $redis->zAdd($key, $score, $member);
+}

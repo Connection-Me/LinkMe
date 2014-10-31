@@ -34,6 +34,15 @@ class activityController extends coreController
 		$startTime = $_REQUEST['startTime'];
 		$endTime = $_REQUEST['endTime'];
 		$initTime = time();
+		
+		if (empty($startTime))
+		{
+			return_message('1');
+			return;
+		}
+		
+		
+		
 		redis_hmset('activity:'.$aid,
 		 array('aid'=>$aid, 'name'=>$name, 'type'=>$type, 'description'=>$description, 'picture'=>$picture,
 		 'lowerLimit'=>$lowerLimit, 'upperLimit'=>$upperLimit, 'openTime'=>$openTime,
