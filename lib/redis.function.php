@@ -90,3 +90,9 @@ function redis_zadd($key, $score, $member)
 	if ($redis == null) $redis = getRedis();
 	return $redis->zAdd($key, $score, $member);
 }
+
+function redis_zrange($key, $start, $stop, $withScore=false)
+{
+	if ($redis == null) $redis = getRedis();
+	return $redis->zRange($key, $start, $stop, $withScore);
+}

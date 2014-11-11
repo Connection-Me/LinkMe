@@ -40,9 +40,7 @@ class activityController extends coreController
 			return_message('1');
 			return;
 		}
-		
-		
-		
+				
 		redis_hmset('activity:'.$aid,
 		 array('aid'=>$aid, 'name'=>$name, 'type'=>$type, 'description'=>$description, 'picture'=>$picture,
 		 'lowerLimit'=>$lowerLimit, 'upperLimit'=>$upperLimit, 'openTime'=>$openTime,
@@ -58,6 +56,10 @@ class activityController extends coreController
 			$activity .= ','.$aid;
 		}
 		redis_hset('user:'.$uid, 'activityList', $activity);
+		
+		//以开始顺序
+		redis_zadd('activityStart:'.$uid, $startTime, $aid);
+		
 		return_message('0');
 		return;
 	}
@@ -71,8 +73,10 @@ class activityController extends coreController
 			return_message('10005');
 			return;
 		}
-	    $activity = redis_hget('user:'.$uid, 'activityList');
-	    $arrayActivity = preg_split('/,/', $activity);
+		$arrayActivity = redis_zrange('activityStart:'.$uid, 0, -1);
+		//var_dump($arrayActivity);
+	    //$activity = redis_hget('user:'.$uid, 'activityList');
+	    //$arrayActivity = preg_split('/,/', $activity);
 	    $actList = array();
 	    $actCount = 0;
 	    $when = $_REQUEST['when'];
