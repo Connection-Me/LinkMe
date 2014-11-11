@@ -73,16 +73,26 @@ class activityController extends coreController
 			return_message('10005');
 			return;
 		}
-		$arrayActivity = redis_zrange('activityStart:'.$uid, 0, -1);
+		
 		//var_dump($arrayActivity);
 	    //$activity = redis_hget('user:'.$uid, 'activityList');
 	    //$arrayActivity = preg_split('/,/', $activity);
-	    $actList = array();
+	    
 	    $actCount = 0;
 	    $when = $_REQUEST['when'];
 	    $way = $_REQUEST['way'];
 	    $offset = $_REQUEST['offset'];
 	    $limit = $_REQUEST['limit'];
+	    $actList = array();
+	    $arrayActivity = array();
+	    if ('todo' == $when || 'doing' == $when)
+	    {
+	    	$arrayActivity = redis_zrange('activityStart:'.$uid, 0, -1);
+	    }
+	    else if('done' == $when)
+	    {
+	    	$arrayActivity = redis_zrevrange('activityStart:'.$uid, 0, -1);
+	    }
 	    forEach($arrayActivity as $aid)
 	    {
 	    	$act = redis_hmget('activity:'.$aid, array('aid', 'name', 'initTime', 'startTime', 'approveCount', 'rejectCount', 'picture',

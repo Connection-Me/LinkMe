@@ -96,3 +96,9 @@ function redis_zrange($key, $start, $stop, $withScore=false)
 	if ($redis == null) $redis = getRedis();
 	return $redis->zRange($key, $start, $stop, $withScore);
 }
+
+function redis_zrevrange($key, $start, $stop, $withScore=false)
+{
+	if ($redis == null) $redis = getRedis();
+	return $redis->zRevRange($key, $start, $stop, $withScore);
+}
