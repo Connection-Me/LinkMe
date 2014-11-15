@@ -18,7 +18,6 @@ class userController extends coreController
 	function index()
 	{
 		echo ('this is LinkMe!');
-		echo (AROOT);
 	//	list($usec, $sec) = explode(" ", microtime());
 	//	var_dump($usec);
 		return;
@@ -142,7 +141,8 @@ class userController extends coreController
     	$uid = null;
     	if ('id' == $way)
     	{
-    		$uid = redis_hget('user'.$data, 'uid');
+    		$uid = redis_hget('user:'.$data, 'uid');
+    		
     	}
     	else if ('userName' == $way)
     	{

@@ -219,6 +219,10 @@ class activityController extends coreController
 			return_message('1');
 			return;
 		}
+		if ($inviteUser == $uid)
+		{
+			return_message('20005');
+		}
 		$inviteUser = userController::checkUserExist($inviteUser, $way);
 		if (false == $inviteUser)
 		{
@@ -289,7 +293,6 @@ class activityController extends coreController
 		}
 		
 		$inviteList = redis_hget('user:'.$uid, 'inviteList');
-		var_dump($inviteList);
 		if (empty($inviteList))
 		{
 			return_message('0');
@@ -300,7 +303,7 @@ class activityController extends coreController
 		$data = array();
 		foreach ($inviteArray as $aid)
 		{
-			$act = redis_hmget('activity:'.$aid, array('name', 'initTime', 'startTime', 
+			$act = redis_hmget('activity:'.$aid, array('aid', 'name', 'initTime', 'startTime', 
 			'approveCount', 'rejectCount', 'picture', 'starter'));
 			var_dump($act);
 		    $starter = $act['starter'];
@@ -309,5 +312,72 @@ class activityController extends coreController
 		}
 		return_message('0', $data);
 		return;
+	}
+	
+	function acceptInvite()
+	{
+	    $sessionId = $_REQUEST['sessionId'];
+		$uid = userController::sessionCheck($sessionId);
+		if (false == $uid)
+		{
+			return_message('10005');
+			return;
+		}
+		
+		$aid = $_REQUEST['aid'];
+		
+		$inviteList = redis_hget('user:'.$uid, 'inviteList');
+	    if (empty($inviteList))
+		{
+			return_message('20006');
+			return;
+		}
+		$inviteArray = preg_split('/,/', $inviteList);
+		$inviteListTmp = '';
+		$flag = false;
+	    foreach ($inviteArray as $actId)
+		{
+			if ($actId == $aid)
+			{
+				$flag = true;
+				continue; 
+			}
+			if ($inviteListTmp != '')
+			{
+				$inviteListTmp .= ',';
+			}
+			$inviteListTmp .= $actId;
+		}
+		if (false == $flag)
+		{
+			return_message('20006');
+			return;
+		}
+		$activity = redis_hmget('activity:'.$aid, array('starter','approveList','approveCount','startTime'));
+		$now = time();
+		if ($now >= $activity['startTime'])
+		{
+			return_message('20007');
+		}
+		$approveList = $activity['approveList'];
+		$approveArray = preg_split('/,/', $approveList);
+		foreach ($approveArray as $apv)
+		{
+			if ($apv == $uid)
+			{
+			    return_message('20006');
+			    return;
+			}
+		}
+		if ($approveList != '')
+		{
+			$approveList .= ',';
+		}
+		$approveList .= $uid;
+		$approveCount = $activity['approveCount'] + 1;
+		redis_hmset('activity:'.$aid, array('approveList'=>$approveList, 'approveCount'=>$approveCount));
+	    redis_hmset('user:'.$uid, array('inviteList'=>$inviteListTmp));
+	    return_message('0');
+	    return;
 	}
 }
