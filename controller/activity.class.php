@@ -244,10 +244,10 @@ class activityController extends coreController
 			return_message('20003');
 			return;
 		}
-		$inviteList = redis_hget('activity'.$aid, 'inviteList');
+		$inviteList = $act['inviteList'];
 		$inviteArray = preg_split('/,/', $inviteList);
 		$data = array();
-		if (0 == count($inviteArray))
+		if (empty($inviteList))
 		{
 			$data['inviteCount'] = 1;
 			$data['inviteList'] = $inviteUser;
@@ -262,8 +262,8 @@ class activityController extends coreController
 					return;
 				}
 			}
-			$data['inviteCount'] = $data['inviteCount'] + 1;
-			$data['inviteList'] = $data['inviteList'] . ',' . $inviteUser;
+			$data['inviteCount'] = count($inviteArray) + 1;
+			$data['inviteList'] = $inviteList . ',' . $inviteUser;
 		}
 		redis_hmset('activity:'.$aid, $data);
 	    $userInvite = redis_hget('user:'.$inviteUser, 'inviteList');
