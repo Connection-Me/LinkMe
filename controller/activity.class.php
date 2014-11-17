@@ -327,11 +327,6 @@ class activityController extends coreController
 		$aid = $_REQUEST['aid'];
 		
 		$inviteList = redis_hget('user:'.$uid, 'inviteList');
-	    if (empty($inviteList))
-		{
-			return_message('20006');
-			return;
-		}
 		$inviteArray = preg_split('/,/', $inviteList);
 		$inviteListTmp = '';
 		$flag = false;
@@ -357,7 +352,7 @@ class activityController extends coreController
 		$now = time();
 		if ($now >= $activity['startTime'])
 		{
-			return_message('20007');
+			return_message('20008');
 		}
 		$approveList = $activity['approveList'];
 		$approveArray = preg_split('/,/', $approveList);
@@ -365,7 +360,7 @@ class activityController extends coreController
 		{
 			if ($apv == $uid)
 			{
-			    return_message('20006');
+			    return_message('20007');
 			    return;
 			}
 		}
