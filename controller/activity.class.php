@@ -212,26 +212,10 @@ class activityController extends coreController
 			return_message('10005');
 			return;
 		}
-		$inviteUser = $_REQUEST['inviteUser'];
-		$way = $_REQUEST['way']; //使用uid或userName或nickName
-		if (empty($inviteUser))
-		{
-			return_message('1');
-			return;
-		}
-		if ($inviteUser == $uid)
-		{
-			return_message('20005');
-		}
-		$inviteUser = userController::checkUserExist($inviteUser, $way);
-		if (false == $inviteUser)
-		{
-			return_message('20004'); //邀请失败，找不到该用户
-			return;
-		}
-		$aid = $_REQUEST['aid'];
+		
+	    $aid = $_REQUEST['aid'];
 		$act = redis_hmget('activity:'.$aid, array('starter', 'startTime', 'inviteCount', 'inviteList'));
-		if ($uid != $act['starter'])
+		if (empty($act) || $uid != $act['starter'])
 		{
 			//发起人不是该用户，无法邀请
 			return_message('20002');
@@ -246,37 +230,69 @@ class activityController extends coreController
 		}
 		$inviteList = $act['inviteList'];
 		$inviteArray = preg_split('/,/', $inviteList);
-		$data = array();
-		if (empty($inviteList))
+		
+		$inviteUser = $_REQUEST['inviteUser'];
+		$inviteUserArray = preg_split('/,/', $inviteUser);
+		$way = $_REQUEST['way']; //使用uid或userName或nickName
+		if (empty($inviteUser))
 		{
-			$data['inviteCount'] = 1;
-			$data['inviteList'] = $inviteUser;
+			return_message('1');
+			return;
 		}
-		else 
+		$data = array(
+		    'inviteCount'=>count($inviteArray),
+		    'inviteList'=>$inviteList
+		);
+		foreach ($inviteUserArray as $tmp)
 		{
-			foreach ($inviteArray as $inv)
-			{
-				if ($inv == $inviteUser)
+		    if ($tmp == $uid)
+		    {
+		    	//不能邀请自己
+			    continue;
+		    }
+		    $inviteUser = userController::checkUserExist($tmp, $way);
+		    if (false == $inviteUser)
+		    {
+			    continue; //邀请失败，找不到该用户
+		    }
+		    $flag = false;
+		    foreach ($inviteArray as $inv)
+		    {
+		        if ($inv == $inviteUser)
 				{
-					return_message('0');
-					return;
+					//该用户已被邀请
+					$flag = true;
+					break;
 				}
-			}
-			$data['inviteCount'] = count($inviteArray) + 1;
-			$data['inviteList'] = $inviteList . ',' . $inviteUser;
-		}
-		redis_hmset('activity:'.$aid, $data);
-	    $userInvite = redis_hget('user:'.$inviteUser, 'inviteList');
-		if (empty($userInvite))
-		{
-			redis_hset('user:'.$inviteUser, 'inviteList', $aid);
-		}
-		else 
-		{
-			redis_hset('user:'.$inviteUser, 'inviteList', $userInvite . ',' . $aid);
-		}
-	  
-	    return_message('0');
+		    }
+		    if ($flag)
+		    {
+		    	continue;
+		    }
+		    if ($data['inviteCount'] == 0)
+		    {
+		    	$data['inviteCount'] = 1;
+			    $data['inviteList'] = $inviteUser;
+		    }
+		    else 
+		    {
+		    	$data['inviteCount'] ++;
+			    $data['inviteList'] .=  (',' . $inviteUser);
+		    }
+		    
+		    $userInvite = redis_hget('user:'.$inviteUser, 'inviteList');
+		    if (empty($userInvite))
+		    {
+			    redis_hset('user:'.$inviteUser, 'inviteList', $aid);
+		    }
+		    else 
+		    {
+			    redis_hset('user:'.$inviteUser, 'inviteList', $userInvite . ',' . $aid);
+		    }
+		}			
+		redis_hmset('activity:'.$aid, $data);  
+	    
+		return_message('0');
 		return;
 	}
 	
