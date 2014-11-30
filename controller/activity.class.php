@@ -32,7 +32,7 @@ class activityController extends coreController
 		$openTime = $_REQUEST['openTime'];
 		$closeTime = $_REQUEST['closeTime'];
 		$startTime = $_REQUEST['startTime'];
-		$endTime = $_REQUEST['endTime'];
+		$stopTime = $_REQUEST['endTime'];
 		$initTime = time();
 		
 		if (empty($startTime))
@@ -46,7 +46,7 @@ class activityController extends coreController
 		redis_hmset('activity:'.$aid,
 		 array('aid'=>$aid, 'name'=>$name, 'type'=>$type, 'description'=>$description, 'picture'=>$picture,
 		 'lowerLimit'=>$lowerLimit, 'upperLimit'=>$upperLimit, 'openTime'=>$openTime,
-		  'closeTime'=>$closeTime, 'starter'=>$uid, 'startTime'=>$startTime, 'endTime'=>$endTime,
+		  'closeTime'=>$closeTime, 'starter'=>$uid, 'startTime'=>$startTime, 'stopTime'=>$stopTime,
 		 'initTime'=>$initTime));
 		$activity = redis_hget('user:'.$uid, 'activityList');
 		if (empty($activity))
