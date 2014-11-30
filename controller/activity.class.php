@@ -333,6 +333,29 @@ class activityController extends coreController
 		return;
 	}
 	
+	function checkInviteNum()
+	{
+		$sessionId = $_REQUEST['sessionId'];
+		$uid = userController::sessionCheck($sessionId);
+		if (false == $uid)
+		{
+			return_message('10005');
+			return;
+		}
+		
+		$inviteList = redis_hget('user:'.$uid, 'inviteList');
+		if (empty($inviteList))
+		{
+			return_message('0');
+			return;
+		}
+		
+		$inviteArray = preg_split('/,/', $inviteList);
+		$num = count($inviteArray);
+		return_message('0', array('num'=>$num));
+		return;
+	}
+	
 	function acceptInvite()
 	{
 	    $sessionId = $_REQUEST['sessionId'];
