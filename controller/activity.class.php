@@ -60,7 +60,7 @@ class activityController extends coreController
 		//以开始顺序
 		redis_zadd('activityStart:'.$uid, $startTime, $aid);
 		
-		return_message('0');
+		return_message('0', array('aid'=>$aid));
 		return;
 	}
 	
