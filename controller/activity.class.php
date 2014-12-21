@@ -180,8 +180,8 @@ class activityController extends coreController
 		}
 		
 		$aid = $_REQUEST['aid'];
-		$act = redis_hmget('activity:'.$aid, array('aid', 'name', 'description', 'startTime', 'stopTime',
-		 'inviteList', 'approveList', 'approveCount', 'rejectList',  'rejectCount', 'picture'));
+		$act = redis_hmget('activity:'.$aid, array('aid', 'name', 'description', 'startTime', 'stopTime', 'openTime', 'closeTime',
+		 'inviteList', 'approveList', 'approveCount', 'rejectList',  'rejectCount', 'picture', 'starter'));
 		$arrayApprove = preg_split('/,/', $act['approveList']);
 		$arrayInvite = preg_split('/,/', $act['inviteList']);
 		$apprList = array();
@@ -198,6 +198,10 @@ class activityController extends coreController
 		}
 		$act['approveList'] = $arrayApprove;
 		$act['inviteList'] = $arrayInvite;
+		
+		$starter = $act['starter'];
+		$starterUser = redis_hmget('user:'.$starter, array('uid', 'nickName', 'profile'));
+	    $act['starter'] = $starterUser;
 		
 		return_message('0', $act);
 		return;
