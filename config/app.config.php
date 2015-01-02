@@ -12,5 +12,6 @@ $GLOBALS['config']['site_domain'] = 'lazyphp3.sinaapp.com';
 $GLOBALS['preg']['regist'] = '[a-zA-Z0-9_@.]'; //允许字母，数字和'_' '@' '.'
 $GLOBALS['jsonconfig']['result'] = config_reader('jsonconfig', 'result', 'json');
 $GLOBALS['jsonconfig']['hobby'] = config_reader('jsonconfig', 'hobby', 'json');
+$GLOBALS['jsonconfig']['qiniu'] = config_reader('jsonconfig', 'qiniu', 'json');
 
 $GLOBALS['log']['addr'] = AROOT . 'log';
