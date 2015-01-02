@@ -245,27 +245,55 @@ class userController extends coreController
 		$uid = userController::sessionCheck($sessionId);
 		if (false == $uid)
 		{
-			return_message('10005');
+		    return_message('10005');
 			return;
 		}
-		$profile = $_REQUEST['profile'];
-		$nickName = $_REQUEST['nickName'];
 		$data = array();
-		if (!empty($profile))
+		$data['profile'] = $_REQUEST['profile'];
+		$data['nickName'] = $_REQUEST['nickName'];
+		$data['gender'] = $_REQUEST['gender'];
+		$data['age'] = $_REQUEST['age'];
+		$data['cellphone'] = $_REQUEST['cellphone'];
+		$data['qq'] = $_REQUEST['qq'];
+		$data['email'] = $_REQUEST['email'];
+		$data['weibo'] = $_REQUEST['weibo'];
+		$data['wechat'] = $_REQUEST['wechat'];
+		foreach($data as $key=>$val)
 		{
-			$data['profile'] = $profile;
-		}
-		if (!empty($nickName))
-		{
-			$data['nickName'] = $nickName;
+			if(empty($val))
+			{
+				unset($data[$key]);
+			}
 		}
 		if (!empty($data))
 		{
 			redis_hmset('user:'.$uid, $data);
 		}
-		//var_dump($data);
 		return_message('0');
-		logDebug('Set user detail information OK! data='.json_encode($data), $uid, $method, $file);
+		return;
+    }
+    
+    //查询用户基础信息  （头像、昵称等）
+    function showUserDetail()
+    {
+        $sessionId = $_REQUEST['sessionId'];
+		$uid = userController::sessionCheck($sessionId);
+		if (false == $uid)
+		{
+		    return_message('10005');
+			return;
+		}
+		$target = $_REQUEST['target'];
+		$way = $_REQUEST['way'];
+		$targetId = userController::checkUserExist($target, $way);
+        if (false == $targetId)
+		{
+		    return_message('2');
+		    return;
+		}
+		$data = array('uid', 'profile', 'nickName', 'gender', 'age', 'cellphone', 'qq', 'email', 'weibo', 'wechat');
+		$result = redis_hmget('user:'.$targetId, $data);
+		return_message('0', $result);
 		return;
     }
     
