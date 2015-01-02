@@ -1,0 +1,3 @@
+LinkMe£º /data/chenyulin/LinkMe
+redis:   /usr/bin/redis-server   /etc/redis/redis.conf
+apache:  /usr/local/apache2
