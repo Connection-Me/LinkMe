@@ -325,9 +325,8 @@ class activityController extends coreController
 		{
 			$act = redis_hmget('activity:'.$aid, array('aid', 'name', 'initTime', 'startTime', 
 			'approveCount', 'rejectCount', 'picture', 'starter'));
-			var_dump($act);
 		    $starter = $act['starter'];
-		    $act['starter'] = redis_hget('user:'.$starter, 'userName');
+		    $act['starter'] = redis_hget('user:'.$starter, 'nickName');
 		    array_push($data, $act);
 		}
 		return_message('0', $data);
