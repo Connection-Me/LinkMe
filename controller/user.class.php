@@ -343,6 +343,46 @@ class userController extends coreController
 		return_message('0', $userList);
 		return;
 	}
+	
+	function getWechatAccessToken()
+	{
+		$code = $_REQUEST['code'];
+		$appid = $GLOBALS['jsonconfig']['wechat']['appid'];
+		$appsecret = $GLOBALS['jsonconfig']['wechat']['appsecret'];
+		$grant_type = $GLOBALS['jsonconfig']['wechat']['grant_type'];
+		$url='https://api.weixin.qq.com/sns/oauth2/access_token?';
+		$url = $url . 'appid=' . $appid . '&secret=' . $appsecret . '&code=' . $code
+		    . '&grant_type=' . $grant_type;
+		echo($url);
+
+		$ch = curl_init();
+        $timeout = 5;
+        curl_setopt ($ch, CURLOPT_URL, $url);
+        curl_setopt ($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt ($ch, CURLOPT_CONNECTTIMEOUT, $timeout);
+        $res= curl_exec($ch);
+        curl_close($ch);
+		
+	    var_dump($res);
+	    $res = json_decode($res);
+	    if (null == $res['errcode'])
+	    {
+	    	//success
+	    	$access_token = $res['access_token'];
+	    	$expires_in = $res['expires_in']; // expire time(in seconds)
+	    	$refresh_token = $res['refresh_token'];
+	    	$openid = $res['openid'];
+	    	$scope = $res['scope'];
+	    	//todo save to db and do something
+	    }
+	    else 
+	    {
+	    	$errcode = $res['errcode'];
+	    	$errmsg = $res['errmsg'];
+	    }
+	    //return_message(0);
+	    return;
+	}
 }
 
 
